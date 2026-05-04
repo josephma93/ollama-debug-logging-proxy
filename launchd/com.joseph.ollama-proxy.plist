@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.joseph.ollama-proxy</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/joseph/bin/ollama-logging-proxy</string>
+    <string>serve</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>OLLAMA_PROXY_LISTEN</key>
+    <string>0.0.0.0:11434</string>
+
+    <key>OLLAMA_PROXY_TARGET</key>
+    <string>http://127.0.0.1:11435</string>
+
+    <key>OLLAMA_PROXY_LOG_DIR</key>
+    <string>/Users/joseph/Library/Logs/ollama-proxy</string>
+
+    <key>OLLAMA_PROXY_RETENTION_DAYS</key>
+    <string>10</string>
+
+    <key>OLLAMA_PROXY_MAX_BODY_BYTES</key>
+    <string>10485760</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/joseph/Library/Logs/ollama-proxy/stdout.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/joseph/Library/Logs/ollama-proxy/stderr.log</string>
+</dict>
+</plist>
