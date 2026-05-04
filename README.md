@@ -2,6 +2,22 @@
 
 Reverse proxy in front of Ollama that preserves normal API behavior and writes tapped request/response bodies to daily JSONL logs.
 
+## CLI
+
+The binary supports:
+
+```bash
+ollama-logging-proxy serve
+ollama-logging-proxy health
+ollama-logging-proxy tail [lines]
+ollama-logging-proxy purge
+```
+
+- `serve`: starts the reverse proxy.
+- `health`: checks `GET /__ollama_logging_proxy/health` on the configured listener.
+- `tail`: prints recent lines from today's `body-YYYY-MM-DD.jsonl` file (default 100).
+- `purge`: runs one retention cleanup pass immediately.
+
 ## Local quality checks
 
 Install [`just`](https://github.com/casey/just) and `golangci-lint`, then run:

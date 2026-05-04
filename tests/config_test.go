@@ -9,6 +9,8 @@ import (
 func TestLoadConfigDefaults(t *testing.T) {
 	t.Setenv(config.EnvListen, "")
 	t.Setenv(config.EnvTarget, "")
+	t.Setenv(config.EnvLogDir, "")
+	t.Setenv(config.EnvRetentionDays, "")
 	t.Setenv(config.EnvMaxBodyBytes, "")
 
 	cfg, err := config.Load()
@@ -22,6 +24,12 @@ func TestLoadConfigDefaults(t *testing.T) {
 	if cfg.Target.String() != config.DefaultTarget {
 		t.Fatalf("expected default target %q, got %q", config.DefaultTarget, cfg.Target.String())
 	}
+	if cfg.LogDir == "" {
+		t.Fatal("expected default log dir to be resolved")
+	}
+	if cfg.RetentionDays != config.DefaultRetentionDays {
+		t.Fatalf("expected default retention days %d, got %d", config.DefaultRetentionDays, cfg.RetentionDays)
+	}
 	if cfg.MaxBodyBytes != config.DefaultMaxBodyBytes {
 		t.Fatalf("expected default max body bytes %d, got %d", config.DefaultMaxBodyBytes, cfg.MaxBodyBytes)
 	}
@@ -30,6 +38,8 @@ func TestLoadConfigDefaults(t *testing.T) {
 func TestLoadConfigOverrides(t *testing.T) {
 	t.Setenv(config.EnvListen, "127.0.0.1:18080")
 	t.Setenv(config.EnvTarget, "http://127.0.0.1:19090")
+	t.Setenv(config.EnvLogDir, "/tmp/ollama-proxy-test")
+	t.Setenv(config.EnvRetentionDays, "21")
 	t.Setenv(config.EnvMaxBodyBytes, "2048")
 
 	cfg, err := config.Load()
@@ -42,6 +52,12 @@ func TestLoadConfigOverrides(t *testing.T) {
 	}
 	if cfg.Target.String() != "http://127.0.0.1:19090" {
 		t.Fatalf("expected overridden target, got %q", cfg.Target.String())
+	}
+	if cfg.LogDir != "/tmp/ollama-proxy-test" {
+		t.Fatalf("expected overridden log dir, got %q", cfg.LogDir)
+	}
+	if cfg.RetentionDays != 21 {
+		t.Fatalf("expected overridden retention days, got %d", cfg.RetentionDays)
 	}
 	if cfg.MaxBodyBytes != 2048 {
 		t.Fatalf("expected overridden max body bytes, got %d", cfg.MaxBodyBytes)
@@ -63,5 +79,23 @@ func TestLoadConfigInvalidMaxBodyBytes(t *testing.T) {
 	_, err := config.Load()
 	if err == nil {
 		t.Fatal("expected error for invalid max body bytes, got nil")
+	}
+}
+
+func TestLoadConfigInvalidListen(t *testing.T) {
+	t.Setenv(config.EnvListen, "bad-listen-value")
+
+	_, err := config.Load()
+	if err == nil {
+		t.Fatal("expected error for invalid listen address, got nil")
+	}
+}
+
+func TestLoadConfigInvalidRetentionDays(t *testing.T) {
+	t.Setenv(config.EnvRetentionDays, "-1")
+
+	_, err := config.Load()
+	if err == nil {
+		t.Fatal("expected error for invalid retention days, got nil")
 	}
 }
