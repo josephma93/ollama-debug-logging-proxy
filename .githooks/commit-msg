@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+# Enforce Conventional Commit subjects via scripts/check-commit-subject.sh.
+# Install with: just hooks
+
+set -eu
+
+commit_msg_file="$1"
+commit_source="${2:-}"
+
+case "$commit_source" in
+	merge|squash) exit 0 ;;
+esac
+
+subject=$(grep -v '^#' "$commit_msg_file" | awk 'NF { print; exit }')
+
+case "$subject" in
+	fixup!*|squash!*|amend!*) exit 0 ;;
+esac
+
+HOOK_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec "$HOOK_DIR/../scripts/check-commit-subject.sh" "$subject"

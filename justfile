@@ -17,6 +17,9 @@ vet:
 lint:
 	golangci-lint run ./...
 
+shellcheck:
+	shellcheck scripts/*.sh .githooks/*
+
 test:
 	go test ./...
 
@@ -27,5 +30,10 @@ check:
 	just fmt
 	just vet
 	just lint
+	just shellcheck
 	just test
 	just race
+
+hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks configured: core.hooksPath=.githooks"

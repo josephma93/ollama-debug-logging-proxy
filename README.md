@@ -20,14 +20,15 @@ ollama-logging-proxy purge
 
 ## Local quality checks
 
-Install [`just`](https://github.com/casey/just) and `golangci-lint`, then run:
+Install [`just`](https://github.com/casey/just), `golangci-lint`, and `shellcheck`, then run:
 
 ```bash
+just hooks   # one-time: enable commit-msg hook
 just --list
 just check
 ```
 
-`just check` runs: `fmt`, `vet`, `lint`, `test`, and `race`.
+`just check` runs: `fmt`, `vet`, `lint`, `shellcheck`, `test`, and `race`.
 
 ## Retention behavior
 
