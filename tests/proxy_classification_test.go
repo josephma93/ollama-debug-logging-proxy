@@ -29,6 +29,26 @@ func TestIsTappedPath(t *testing.T) {
 	}
 }
 
+func TestShouldLogResponseBody(t *testing.T) {
+	testCases := []struct {
+		path string
+		want bool
+	}{
+		{path: "/api/chat", want: true},
+		{path: "/api/generate", want: true},
+		{path: "/api/embed", want: false},
+		{path: "/api/embeddings", want: false},
+		{path: "/api/embed?trace=1", want: false},
+	}
+
+	for _, tc := range testCases {
+		got := proxy.ShouldLogResponseBody(tc.path)
+		if got != tc.want {
+			t.Fatalf("ShouldLogResponseBody(%q) = %v, expected %v", tc.path, got, tc.want)
+		}
+	}
+}
+
 func TestNormalizePath(t *testing.T) {
 	testCases := []struct {
 		input    string

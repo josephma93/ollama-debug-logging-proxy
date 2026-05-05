@@ -18,6 +18,39 @@ ollama-logging-proxy purge
 - `tail`: prints recent lines from today's `body-YYYY-MM-DD.jsonl` file (default 100).
 - `purge`: runs one retention cleanup pass immediately.
 
+## Homebrew
+
+This repo now includes a Homebrew formula at [`Formula/ollama-logging-proxy.rb`](Formula/ollama-logging-proxy.rb).
+
+Current status:
+
+- Before the first tagged GitHub release, install from source with Homebrew:
+
+```bash
+brew install --HEAD ./Formula/ollama-logging-proxy.rb
+```
+
+- After release automation has published a tagged release and updated the formula, install from the tap:
+
+```bash
+brew tap josephma93/ollama-debug-logging-proxy https://github.com/josephma93/ollama-debug-logging-proxy
+brew install josephma93/ollama-debug-logging-proxy/ollama-logging-proxy
+```
+
+Homebrew only installs the binary and helper assets. It does not automatically rewrite your launchd topology.
+
+To wire the proxy into launchd after `brew install`:
+
+```bash
+ollama-logging-proxy-install
+```
+
+To remove the launchd services while leaving the Homebrew-managed binary installed:
+
+```bash
+ollama-logging-proxy-uninstall
+```
+
 ## Local quality checks
 
 Install [`just`](https://github.com/casey/just), `golangci-lint`, and `shellcheck`, then run:
@@ -65,11 +98,37 @@ Scripts are in [`scripts/`](scripts):
 ./scripts/uninstall.sh
 ```
 
-`install.sh` builds the proxy binary, installs launch agents into `~/Library/LaunchAgents`, configures PRD env vars, and bootstraps both agents.
+`install.sh` is the source-checkout convenience path. It builds the proxy binary, then installs launch agents into `~/Library/LaunchAgents`, configures PRD env vars, and bootstraps both agents.
+
+`install-launchd.sh` installs or updates the launchd setup for an already-installed binary, which is the right entrypoint for Homebrew installs.
 
 `smoke-test.sh` checks `GET /__ollama_logging_proxy/health`, sends `POST /api/generate`, and verifies today’s `body-YYYY-MM-DD.jsonl` contains a `/api/generate` entry.
 
-`uninstall.sh` unloads agents and removes installed files (binary removal on by default).
+`uninstall-launchd.sh` removes only the LaunchAgents and optionally the proxy logs.
+
+`uninstall.sh` is the source-checkout convenience path. It removes the LaunchAgents and, by default, removes the locally installed binary. If the binary path points at Homebrew’s `bin`, it leaves the binary alone unless you explicitly set `REMOVE_BINARY=1`.
+
+## Release Automation
+
+Homebrew release automation follows this sequence:
+
+Tag semantics:
+
+- Stable release tag: `v0.1.0`
+- Prerelease tag: `v0.1.1-canary.1`, `v0.1.1-rc.1`, `v0.1.1-beta.1`, `v0.1.1-alpha.1`
+- Rule: if the version contains a hyphen suffix after the numeric core, it is treated as a prerelease.
+
+Homebrew release automation follows this sequence:
+
+1. Push a version tag such as `v0.1.0` or `v0.1.1-canary.1`.
+2. [`.github/workflows/release.yml`](.github/workflows/release.yml) builds macOS release tarballs for `arm64` and `x86_64`, including:
+   - `ollama-logging-proxy`
+   - `scripts/install-launchd.sh`
+   - `scripts/uninstall-launchd.sh`
+   - `launchd/*.plist`
+3. The workflow uploads those tarballs and matching `.sha256` files to the GitHub Release.
+4. If the tag is a stable tag, the same release workflow regenerates [`Formula/ollama-logging-proxy.rb`](Formula/ollama-logging-proxy.rb) from [`.github/formula-template.rb`](.github/formula-template.rb) using the release checksums and pushes the formula update back to `main`.
+5. If the tag is a prerelease tag, the workflow still publishes release artifacts, but it does not rewrite the stable Homebrew formula.
 
 ## CI
 

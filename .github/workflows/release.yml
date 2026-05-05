@@ -1,0 +1,184 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  classify-tag:
+    name: Classify tag
+    runs-on: ubuntu-latest
+    outputs:
+      is_prerelease: ${{ steps.classify.outputs.is_prerelease }}
+      version: ${{ steps.classify.outputs.version }}
+      tag: ${{ steps.classify.outputs.tag }}
+    steps:
+      - name: Classify version tag
+        id: classify
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          if [[ "$VERSION" == *-* ]]; then
+            IS_PRERELEASE=true
+          else
+            IS_PRERELEASE=false
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+
+  create-release:
+    name: Ensure release exists
+    needs: classify-tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Ensure release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.classify-tag.outputs.tag }}
+          IS_PRERELEASE: ${{ needs.classify-tag.outputs.is_prerelease }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+
+          ARGS=(release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TAG" --notes "")
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            ARGS+=(--prerelease)
+          fi
+          gh "${ARGS[@]}"
+
+  build-and-upload:
+    name: Build and upload macOS artifacts
+    needs: create-release
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goarch: arm64
+            target: aarch64-apple-darwin
+          - goarch: amd64
+            target: x86_64-apple-darwin
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+
+      - name: Build binary
+        env:
+          GOOS: darwin
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          mkdir -p dist
+          go build -o dist/ollama-logging-proxy ./cmd/ollama-proxy
+
+      - name: Package release artifact
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          STAGE="artifacts/ollama-logging-proxy-${TARGET}"
+          mkdir -p "$STAGE/scripts" "$STAGE/launchd"
+          cp dist/ollama-logging-proxy "$STAGE/ollama-logging-proxy"
+          cp scripts/install-launchd.sh scripts/uninstall-launchd.sh "$STAGE/scripts/"
+          cp launchd/com.joseph.ollama-proxy.plist launchd/com.joseph.ollama-private.plist "$STAGE/launchd/"
+          tar -czf "artifacts/ollama-logging-proxy-${TARGET}.tar.gz" -C artifacts "ollama-logging-proxy-${TARGET}"
+          shasum -a 256 "artifacts/ollama-logging-proxy-${TARGET}.tar.gz" > "artifacts/ollama-logging-proxy-${TARGET}.tar.gz.sha256"
+
+      - name: Upload release artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release upload "$TAG" \
+            "artifacts/ollama-logging-proxy-${{ matrix.target }}.tar.gz" \
+            "artifacts/ollama-logging-proxy-${{ matrix.target }}.tar.gz.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+  update-formula:
+    name: Update Homebrew formula
+    if: needs.classify-tag.outputs.is_prerelease == 'false'
+    needs:
+      - classify-tag
+      - build-and-upload
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Set version variables
+        id: vars
+        env:
+          TAG: ${{ needs.classify-tag.outputs.tag }}
+          VERSION: ${{ needs.classify-tag.outputs.version }}
+        run: |
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Download release checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.vars.outputs.tag }}
+        run: |
+          gh release download "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "ollama-logging-proxy-*.sha256"
+
+      - name: Read checksums
+        id: sha
+        run: |
+          ARM64_SHA=$(cut -d' ' -f1 ollama-logging-proxy-aarch64-apple-darwin.tar.gz.sha256)
+          X64_SHA=$(cut -d' ' -f1 ollama-logging-proxy-x86_64-apple-darwin.tar.gz.sha256)
+          echo "arm64=$ARM64_SHA" >> "$GITHUB_OUTPUT"
+          echo "x64=$X64_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Generate formula
+        env:
+          TAG: ${{ steps.vars.outputs.tag }}
+          VERSION: ${{ steps.vars.outputs.version }}
+          ARM64_SHA: ${{ steps.sha.outputs.arm64 }}
+          X64_SHA: ${{ steps.sha.outputs.x64 }}
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import os
+
+          template = Path(".github/formula-template.rb").read_text()
+          replacements = {
+              "{{VERSION}}": os.environ["VERSION"],
+              "{{TAG}}": os.environ["TAG"],
+              "{{SHA_ARM64}}": os.environ["ARM64_SHA"],
+              "{{SHA_X64}}": os.environ["X64_SHA"],
+          }
+          for key, value in replacements.items():
+              template = template.replace(key, value)
+
+          Path("Formula/ollama-logging-proxy.rb").write_text(template)
+          PY
+
+      - name: Commit and push formula update
+        env:
+          TAG: ${{ steps.vars.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/ollama-logging-proxy.rb
+          git commit -m "build(homebrew): update formula for ${TAG}" || echo "No changes to commit"
+          git push origin HEAD:main

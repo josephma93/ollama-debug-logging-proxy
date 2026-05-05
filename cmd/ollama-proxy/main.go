@@ -217,6 +217,12 @@ func buildCaptureHook(bodyWriter *logging.BodyWriter, maxBodyBytes int64, errLog
 	return func(_ context.Context, event proxy.CaptureEvent) {
 		requestBody, requestTruncated, requestRedacted := prepareBodyForLog(event.Request.Body, maxBytes)
 		responseBody, responseTruncated, responseRedacted := prepareBodyForLog(event.Response.Body, maxBytes)
+		recordResponseTruncated := event.Response.Truncated || responseTruncated
+		if !proxy.ShouldLogResponseBody(event.Metadata.Path) {
+			responseBody = ""
+			recordResponseTruncated = false
+			responseRedacted = false
+		}
 
 		record := logging.BodyLogRecord{
 			ID:                newRequestID(),
@@ -232,7 +238,7 @@ func buildCaptureHook(bodyWriter *logging.BodyWriter, maxBodyBytes int64, errLog
 			RequestBody:       requestBody,
 			ResponseBody:      responseBody,
 			RequestTruncated:  event.Request.Truncated || requestTruncated,
-			ResponseTruncated: event.Response.Truncated || responseTruncated,
+			ResponseTruncated: recordResponseTruncated,
 			RequestRedacted:   requestRedacted,
 			ResponseRedacted:  responseRedacted,
 		}

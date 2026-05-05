@@ -6,40 +6,29 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 1
 fi
 
-PROXY_LABEL="${PROXY_LABEL:-com.joseph.ollama-proxy}"
-OLLAMA_LABEL="${OLLAMA_LABEL:-com.joseph.ollama-server}"
-
-LAUNCH_AGENTS_DIR="${LAUNCH_AGENTS_DIR:-$HOME/Library/LaunchAgents}"
-PROXY_PLIST_PATH="${PROXY_PLIST_PATH:-$LAUNCH_AGENTS_DIR/${PROXY_LABEL}.plist}"
-OLLAMA_PLIST_PATH="${OLLAMA_PLIST_PATH:-$LAUNCH_AGENTS_DIR/${OLLAMA_LABEL}.plist}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 BIN_DIR="${BIN_DIR:-$HOME/bin}"
 BINARY_NAME="${BINARY_NAME:-ollama-logging-proxy}"
 BINARY_PATH="${BINARY_PATH:-$BIN_DIR/$BINARY_NAME}"
 
-REMOVE_BINARY="${REMOVE_BINARY:-1}"
-REMOVE_LOGS="${REMOVE_LOGS:-0}"
-OLLAMA_PROXY_LOG_DIR="${OLLAMA_PROXY_LOG_DIR:-$HOME/Library/Logs/ollama-proxy}"
+if [[ -z "${REMOVE_BINARY:-}" ]]; then
+  REMOVE_BINARY="1"
+  if command -v brew >/dev/null 2>&1; then
+    BREW_PREFIX="$(brew --prefix)"
+    if [[ "$BINARY_PATH" == "$BREW_PREFIX/bin/$BINARY_NAME" ]]; then
+      REMOVE_BINARY="0"
+    fi
+  fi
+fi
 
-UID_DOMAIN="gui/$(id -u)"
-
-echo "Stopping LaunchAgents"
-launchctl bootout "$UID_DOMAIN/$PROXY_LABEL" >/dev/null 2>&1 || true
-launchctl bootout "$UID_DOMAIN/$OLLAMA_LABEL" >/dev/null 2>&1 || true
-launchctl disable "$UID_DOMAIN/$PROXY_LABEL" >/dev/null 2>&1 || true
-launchctl disable "$UID_DOMAIN/$OLLAMA_LABEL" >/dev/null 2>&1 || true
-
-echo "Removing LaunchAgent files"
-rm -f "$PROXY_PLIST_PATH" "$OLLAMA_PLIST_PATH"
+"$SCRIPT_DIR/uninstall-launchd.sh"
 
 if [[ "$REMOVE_BINARY" == "1" ]]; then
   echo "Removing binary $BINARY_PATH"
   rm -f "$BINARY_PATH"
-fi
-
-if [[ "$REMOVE_LOGS" == "1" ]]; then
-  echo "Removing proxy logs in $OLLAMA_PROXY_LOG_DIR"
-  rm -rf "$OLLAMA_PROXY_LOG_DIR"
+else
+  echo "Leaving binary in place at $BINARY_PATH"
 fi
 
 echo "Uninstall complete."

@@ -172,3 +172,4 @@ body-*.jsonl
 # Proxy launchd stdio
 /stdout.log
 /stderr.log
+.gocache/

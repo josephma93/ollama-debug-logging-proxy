@@ -148,3 +148,59 @@ func TestBuildCaptureHookWritesRecord(t *testing.T) {
 		t.Fatal("expected response_truncated=true")
 	}
 }
+
+func TestBuildCaptureHookSkipsEmbedResponseBody(t *testing.T) {
+	logDir := t.TempDir()
+	now := time.Date(2026, 5, 4, 10, 0, 0, 0, time.UTC)
+	writer, err := logging.NewBodyWriterWithClock(logDir, func() time.Time { return now })
+	if err != nil {
+		t.Fatalf("NewBodyWriterWithClock failed: %v", err)
+	}
+	defer writer.Close()
+
+	hook := buildCaptureHook(writer, 1024, log.New(io.Discard, "", 0))
+	hook(context.Background(), proxy.CaptureEvent{
+		Metadata: proxy.CaptureMetadata{
+			StartedAt: now,
+			Duration:  250 * time.Millisecond,
+			ClientIP:  "127.0.0.1",
+			Method:    "POST",
+			Path:      "/api/embed",
+			UserAgent: "test-agent",
+			Status:    200,
+		},
+		Request: proxy.BodyCapture{
+			Body: []byte(`{"model":"embeddinggemma:latest","input":"hello"}`),
+		},
+		Response: proxy.BodyCapture{
+			Body:      []byte(`{"embeddings":[[0.1,0.2,0.3]]}`),
+			Truncated: true,
+		},
+	})
+
+	lines, err := tailLines(filepath.Join(logDir, "body-2026-05-04.jsonl"), 1)
+	if err != nil {
+		t.Fatalf("tailLines failed: %v", err)
+	}
+	if len(lines) != 1 {
+		t.Fatalf("expected 1 log line, got %d", len(lines))
+	}
+
+	var record logging.BodyLogRecord
+	if err := json.Unmarshal([]byte(lines[0]), &record); err != nil {
+		t.Fatalf("unmarshal log line: %v", err)
+	}
+
+	if record.Path != "/api/embed" {
+		t.Fatalf("unexpected path %q", record.Path)
+	}
+	if record.ResponseBody != "" {
+		t.Fatalf("expected empty embed response body, got %q", record.ResponseBody)
+	}
+	if record.ResponseTruncated {
+		t.Fatal("did not expect response_truncated for skipped embed response body")
+	}
+	if record.ResponseRedacted {
+		t.Fatal("did not expect response_redacted for skipped embed response body")
+	}
+}

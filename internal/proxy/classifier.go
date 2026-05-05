@@ -11,6 +11,11 @@ var tappedEndpointSet = map[string]struct{}{
 	"/api/embed":      {},
 }
 
+var skipResponseBodySet = map[string]struct{}{
+	"/api/embeddings": {},
+	"/api/embed":      {},
+}
+
 func NormalizePath(rawPath string) string {
 	if rawPath == "" {
 		return "/"
@@ -30,4 +35,9 @@ func NormalizePath(rawPath string) string {
 func IsTappedPath(rawPath string) bool {
 	_, ok := tappedEndpointSet[NormalizePath(rawPath)]
 	return ok
+}
+
+func ShouldLogResponseBody(rawPath string) bool {
+	_, skip := skipResponseBodySet[NormalizePath(rawPath)]
+	return !skip
 }
