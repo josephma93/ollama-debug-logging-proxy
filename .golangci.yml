@@ -9,4 +9,10 @@ linters:
     - govet
     - ineffassign
     - staticcheck
+    - stylecheck
     - unused
+
+linters-settings:
+  stylecheck:
+    checks:
+      - ST1003
