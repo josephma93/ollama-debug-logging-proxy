@@ -165,3 +165,10 @@ Temporary Items
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,intellij+all,visualstudiocode,go
+
+### Project-specific ###
+# Captured request/response bodies (see internal/retention)
+body-*.jsonl
+# Proxy launchd stdio
+/stdout.log
+/stderr.log
