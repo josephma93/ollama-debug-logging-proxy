@@ -1,5 +1,8 @@
 name: release
 
+env:
+  BREW_TAP_NAME: josephma93/ollama-debug-logging-proxy
+
 on:
   push:
     tags:
@@ -110,7 +113,6 @@ jobs:
 
   update-formula:
     name: Update Homebrew formula
-    if: needs.classify-tag.outputs.is_prerelease == 'false'
     needs:
       - classify-tag
       - build-and-upload
@@ -123,38 +125,52 @@ jobs:
         with:
           ref: main
 
-      - name: Set version variables
+      - name: Set formula variables
         id: vars
         env:
           TAG: ${{ needs.classify-tag.outputs.tag }}
           VERSION: ${{ needs.classify-tag.outputs.version }}
+          IS_PRERELEASE: ${{ needs.classify-tag.outputs.is_prerelease }}
         run: |
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            echo "formula_path=Formula/ollama-logging-proxy-canary.rb" >> "$GITHUB_OUTPUT"
+            echo "formula_class=OllamaLoggingProxyCanary" >> "$GITHUB_OUTPUT"
+            echo "desc_suffix= (canary prerelease)" >> "$GITHUB_OUTPUT"
+            echo "conflict_formula=ollama-logging-proxy" >> "$GITHUB_OUTPUT"
+            echo "caveat_extra=      This canary formula tracks prerelease tags and conflicts with the stable formula." >> "$GITHUB_OUTPUT"
+          else
+            echo "formula_path=Formula/ollama-logging-proxy.rb" >> "$GITHUB_OUTPUT"
+            echo "formula_class=OllamaLoggingProxy" >> "$GITHUB_OUTPUT"
+            echo "desc_suffix=" >> "$GITHUB_OUTPUT"
+            echo "conflict_formula=ollama-logging-proxy-canary" >> "$GITHUB_OUTPUT"
+            echo "caveat_extra=" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Download release checksums
+      - name: Download source tarball
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.vars.outputs.tag }}
         run: |
-          gh release download "$TAG" \
-            --repo "$GITHUB_REPOSITORY" \
-            --pattern "ollama-logging-proxy-*.sha256"
+          curl -L "https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${TAG}.tar.gz" \
+            -o "source-${TAG}.tar.gz"
 
-      - name: Read checksums
+      - name: Read checksum
         id: sha
         run: |
-          ARM64_SHA=$(cut -d' ' -f1 ollama-logging-proxy-aarch64-apple-darwin.tar.gz.sha256)
-          X64_SHA=$(cut -d' ' -f1 ollama-logging-proxy-x86_64-apple-darwin.tar.gz.sha256)
-          echo "arm64=$ARM64_SHA" >> "$GITHUB_OUTPUT"
-          echo "x64=$X64_SHA" >> "$GITHUB_OUTPUT"
+          SOURCE_SHA=$(sha256sum "source-${{ steps.vars.outputs.tag }}.tar.gz" | cut -d' ' -f1)
+          echo "source=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Generate formula
         env:
           TAG: ${{ steps.vars.outputs.tag }}
           VERSION: ${{ steps.vars.outputs.version }}
-          ARM64_SHA: ${{ steps.sha.outputs.arm64 }}
-          X64_SHA: ${{ steps.sha.outputs.x64 }}
+          SHA_SOURCE: ${{ steps.sha.outputs.source }}
+          FORMULA_PATH: ${{ steps.vars.outputs.formula_path }}
+          FORMULA_CLASS: ${{ steps.vars.outputs.formula_class }}
+          DESC_SUFFIX: ${{ steps.vars.outputs.desc_suffix }}
+          CONFLICT_FORMULA: ${{ steps.vars.outputs.conflict_formula }}
+          CAVEAT_EXTRA: ${{ steps.vars.outputs.caveat_extra }}
         run: |
           python3 <<'PY'
           from pathlib import Path
@@ -164,21 +180,25 @@ jobs:
           replacements = {
               "{{VERSION}}": os.environ["VERSION"],
               "{{TAG}}": os.environ["TAG"],
-              "{{SHA_ARM64}}": os.environ["ARM64_SHA"],
-              "{{SHA_X64}}": os.environ["X64_SHA"],
+              "{{SHA_SOURCE}}": os.environ["SHA_SOURCE"],
+              "{{CLASS_NAME}}": os.environ["FORMULA_CLASS"],
+              "{{DESC_SUFFIX}}": os.environ["DESC_SUFFIX"],
+              "{{CONFLICT_FORMULA}}": os.environ["CONFLICT_FORMULA"],
+              "{{CAVEAT_EXTRA}}": os.environ["CAVEAT_EXTRA"],
           }
           for key, value in replacements.items():
               template = template.replace(key, value)
 
-          Path("Formula/ollama-logging-proxy.rb").write_text(template)
+          Path(os.environ["FORMULA_PATH"]).write_text(template)
           PY
 
       - name: Commit and push formula update
         env:
           TAG: ${{ steps.vars.outputs.tag }}
+          FORMULA_PATH: ${{ steps.vars.outputs.formula_path }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/ollama-logging-proxy.rb
+          git add "$FORMULA_PATH"
           git commit -m "build(homebrew): update formula for ${TAG}" || echo "No changes to commit"
           git push origin HEAD:main

@@ -22,20 +22,14 @@ ollama-logging-proxy purge
 
 This repo now includes a Homebrew formula at [`Formula/ollama-logging-proxy.rb`](Formula/ollama-logging-proxy.rb).
 
-Current status:
-
-- Before the first tagged GitHub release, install from source with Homebrew:
-
-```bash
-brew install --HEAD ./Formula/ollama-logging-proxy.rb
-```
-
-- After release automation has published a tagged release and updated the formula, install from the tap:
+Supported install path:
 
 ```bash
 brew tap josephma93/ollama-debug-logging-proxy https://github.com/josephma93/ollama-debug-logging-proxy
 brew install josephma93/ollama-debug-logging-proxy/ollama-logging-proxy
 ```
+
+This is the supported user path for stable releases. Modern Homebrew requires formulae to come from a tap; local `--HEAD` installs from `./Formula/...` are not supported here.
 
 Homebrew only installs the binary and helper assets. It does not automatically rewrite your launchd topology.
 
@@ -118,8 +112,6 @@ Tag semantics:
 - Prerelease tag: `v0.1.1-canary.1`, `v0.1.1-rc.1`, `v0.1.1-beta.1`, `v0.1.1-alpha.1`
 - Rule: if the version contains a hyphen suffix after the numeric core, it is treated as a prerelease.
 
-Homebrew release automation follows this sequence:
-
 1. Push a version tag such as `v0.1.0` or `v0.1.1-canary.1`.
 2. [`.github/workflows/release.yml`](.github/workflows/release.yml) builds macOS release tarballs for `arm64` and `x86_64`, including:
    - `ollama-logging-proxy`
@@ -129,6 +121,11 @@ Homebrew release automation follows this sequence:
 3. The workflow uploads those tarballs and matching `.sha256` files to the GitHub Release.
 4. If the tag is a stable tag, the same release workflow regenerates [`Formula/ollama-logging-proxy.rb`](Formula/ollama-logging-proxy.rb) from [`.github/formula-template.rb`](.github/formula-template.rb) using the release checksums and pushes the formula update back to `main`.
 5. If the tag is a prerelease tag, the workflow still publishes release artifacts, but it does not rewrite the stable Homebrew formula.
+
+In other words:
+
+- Stable tags are installable through the Homebrew tap once the formula update lands.
+- Prerelease tags publish GitHub release artifacts for manual testing, but they are not a supported Homebrew install channel.
 
 ## CI
 

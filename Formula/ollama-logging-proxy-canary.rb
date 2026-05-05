@@ -1,8 +1,10 @@
-class OllamaLoggingProxy < Formula
-  desc "Reverse proxy in front of Ollama with JSONL request and response logging"
+class OllamaLoggingProxyCanary < Formula
+  desc "Reverse proxy in front of Ollama with JSONL request and response logging (canary prerelease)"
   homepage "https://github.com/josephma93/ollama-debug-logging-proxy"
-  head "https://github.com/josephma93/ollama-debug-logging-proxy.git", branch: "main"
-
+  version "0.1.0-canary.1"
+  url "https://github.com/josephma93/ollama-debug-logging-proxy/archive/refs/tags/v0.1.0-canary.1.tar.gz"
+  sha256 "57bf5a651b40d96cc2cef7254dffc10290c2e65103659c987241aeee08b714ef"
+  conflicts_with "ollama-logging-proxy", because: "both formulae install the same proxy and helper command names"
   depends_on "go" => :build
 
   def install
@@ -33,6 +35,7 @@ class OllamaLoggingProxy < Formula
   def caveats
     <<~EOS
       This formula installs the proxy binary and launchd helper scripts only.
+      This canary formula tracks prerelease tags and conflicts with the stable formula.
 
       To install the macOS LaunchAgents:
         ollama-logging-proxy-install
