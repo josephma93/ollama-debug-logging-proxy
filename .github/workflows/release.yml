@@ -96,7 +96,7 @@ jobs:
           mkdir -p "$STAGE/scripts" "$STAGE/launchd"
           cp dist/ollama-logging-proxy "$STAGE/ollama-logging-proxy"
           cp scripts/install-launchd.sh scripts/uninstall-launchd.sh "$STAGE/scripts/"
-          cp launchd/com.joseph.ollama-proxy.plist launchd/com.joseph.ollama-private.plist "$STAGE/launchd/"
+          cp launchd/dev.ollama.logging-proxy.plist launchd/dev.ollama.server.plist "$STAGE/launchd/"
           tar -czf "artifacts/ollama-logging-proxy-${TARGET}.tar.gz" -C artifacts "ollama-logging-proxy-${TARGET}"
           shasum -a 256 "artifacts/ollama-logging-proxy-${TARGET}.tar.gz" > "artifacts/ollama-logging-proxy-${TARGET}.tar.gz.sha256"
 

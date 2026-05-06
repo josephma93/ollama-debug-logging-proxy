@@ -30,6 +30,7 @@ A reverse proxy that sits in front of Ollama, preserves normal API behavior, and
 ## History
 
 - [[decisions/index|Decisions]] — append-only ADR record (18 ADRs)
+- [[v0.1.1]] — patch release fixing release artifact packaging paths
 - [[v0.1.0]] — first stable release after canary hardening
 - [[releases/_template|Releases template]] — per-tag note template
 
