@@ -10,6 +10,7 @@ This project library is organized as a small linked set of notes:
 - [[execution-plan|Execution Plan]]
 - [[vault-conventions]]
 - [[glossary]]
+- [[decisions/index|Decisions]]
 
 Use this note as the operator and system overview. Use the PRD for product requirements and the execution plan for engineering sequencing.
 

@@ -11,10 +11,14 @@
             "id": "d413d3dabc145595",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "decisions/0016-launchagent-labels-dev-ollama.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "0016-launchagent-labels-dev-ollama"
             }
           }
         ]
@@ -181,17 +185,37 @@
   },
   "active": "d413d3dabc145595",
   "lastOpenFiles": [
+    "decisions/0008-log-only-image-redaction.md",
+    "decisions/index.md",
+    "decisions/0016-launchagent-labels-dev-ollama.md",
+    "decisions/0015-launchagent-labels-com-joseph.md",
+    "decisions/0014-homebrew-tap-stable-canary-channels.md",
+    "decisions/0013-conventional-commits-gate.md",
+    "decisions/0012-omit-headers-from-body-logs.md",
+    "decisions/0011-proxy-owned-health-endpoint.md",
+    "decisions/0010-jsonl-daily-files.md",
+    "decisions/0009-filename-based-retention.md",
+    "decisions/0007-tapped-endpoint-allowlist.md",
+    "decisions/0006-env-var-only-config.md",
+    "decisions/0005-single-binary-subcommands.md",
+    "decisions/0004-go-stdlib-reverseproxy.md",
+    "decisions/0003-user-launchagent-scope.md",
+    "decisions/0002-two-process-launchd-topology.md",
+    "decisions/0001-reverse-proxy-not-fork.md",
+    "projects/ollama-debug-logging-proxy/execution-plan.md",
     "home.md",
     "explanation/execution-plan.md",
+    "projects/ollama-debug-logging-proxy/index.md",
+    "projects/ollama-debug-logging-proxy/prd.md",
     "reference/prd.md",
     "releases/_template.md",
     "glossary.md",
     "decisions/_template.md",
-    "vault-conventions.md",
     "releases",
     "decisions",
     "explanation",
     "reference",
-    "Welcome.md"
+    "projects/ollama-debug-logging-proxy",
+    "projects"
   ]
 }
