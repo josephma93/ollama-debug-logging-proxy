@@ -19,6 +19,7 @@ Architecture Decision Records (ADRs) capture the significant choices made while 
 - [[0013-conventional-commits-gate|0013 — Conventional Commit Subjects Enforced via Local commit-msg Hook and CI]] — belt-and-suspenders enforcement of the Conventional Commit format at both local and CI layers.
 - [[0014-homebrew-tap-stable-canary-channels|0014 — Homebrew Tap with Stable + Canary Formulas, Hyphen-Suffix Tag = Prerelease]] — two Homebrew formulas (stable and canary), with the release channel determined by git tag shape.
 - [[0016-launchagent-labels-dev-ollama|0016 — Rename LaunchAgent Labels to `dev.ollama.logging-proxy` and `dev.ollama.server`]] — canonical service labels using the `dev.ollama.*` project namespace.
+- [[0017-hard-rules-for-vault-hygiene|0017 — Adopt Strict Hard Rules for Vault Hygiene]] — converts the descriptive vault conventions into a numbered, enforceable contract (R1–R22) covering structure, note shape, ADR discipline, linking, source-of-truth boundaries, hygiene, and process.
 
 ## Superseded
 
