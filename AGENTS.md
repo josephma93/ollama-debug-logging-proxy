@@ -1,7 +1,25 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-`cmd/ollama-proxy/` is the CLI entrypoint. The binary supports `serve`, `health`, `tail [lines]`, and `purge`. Core packages live under `internal/`: `proxy/` handles forwarding and body capture, `config/` loads env-driven settings, and `logging/`, `redact/`, and `retention/` support log writing and cleanup. End-to-end tests live in `tests/`; package unit tests sit beside code as `*_test.go`. Operational assets live in `scripts/` and `launchd/`.
+`cmd/ollama-proxy/` is the CLI entrypoint. The binary supports `serve`, `health`, `tail [lines]`, and `purge`. Core packages live under `internal/`: `proxy/` handles forwarding and body capture, `config/` loads env-driven settings, and `logging/`, `redact/`, and `retention/` support log writing and cleanup. End-to-end tests live in `tests/`; package unit tests sit beside code as `*_test.go`. Operational assets live in `scripts/` and `launchd/`. Long-form project documentation lives in `documentation-vault/` — see [Documentation Vault](#documentation-vault) below before touching it.
+
+## Documentation Vault
+Long-form project documentation lives in [`documentation-vault/`](documentation-vault/home.md). Before adding, moving, splitting, or deleting any vault note, read [`documentation-vault/vault-conventions.md`](documentation-vault/vault-conventions.md) — **mandatory**. The vault has 22 numbered hard rules (R1–R22) and they block merge.
+
+Critical things to know before you touch the vault:
+
+- **Single-project root.** Never create a `projects/<name>/` wrapper. The vault root *is* the project.
+- **Bucket placement.** Every note belongs in exactly one of `explanation/` (the why), `reference/` (the what), `how-to/` (the steps), `decisions/` (ADRs, append-only), or `releases/` (per-tag). The vault root holds only `home.md`, `vault-conventions.md`, and `glossary.md`.
+- **Wikilinks are short form.** `[[name]]`, not `[[bucket/name]]`. Filenames are unique by R4. The only path-qualified exceptions are `[[decisions/index]]` and `[[releases/_template]]`.
+- **Every note ends with `## Related`.** That is what makes the vault a network rather than a folder of orphans.
+- **ADRs are append-only.** To change an accepted decision, write a new numbered ADR that supersedes the old one — do not edit the old one in place. See the 0015 ↔ 0016 worked example in [`documentation-vault/decisions/`](documentation-vault/decisions/index.md).
+- **Adding `decisions/NNNN-*.md`?** Update [`decisions/index.md`](documentation-vault/decisions/index.md) in the same commit (R11).
+- **Pushing a release tag?** Add `releases/<tag>.md` first (R12).
+- **No prose duplication between code-rooted docs and the vault.** This file and [`README.md`](README.md) describe **current code state**; the vault explains **thinking**. Link, do not duplicate (R17).
+- **Hygiene.** No `TODO` / `FIXME` / `XXX` markers in committed vault notes (R20). No hardcoded user paths or LAN IPs (R19) — use `$HOME`, `<user>`, `<lan-ip>`.
+- **Changes to `vault-conventions.md`** require a new ADR proposing the change, in the same commit (R21). The hard-rules block was itself adopted via [ADR 0017](documentation-vault/decisions/0017-hard-rules-for-vault-hygiene.md).
+
+[`vault-conventions.md`](documentation-vault/vault-conventions.md) is authoritative. Its `## Hard rules` section answers "where does this go?" and "is this allowed?" definitively; the upper sections explain why the rules look the way they do.
 
 ## Build, Test, and Development Commands
 Use Go `1.22` as declared in [go.mod](go.mod). `just` is the main local entrypoint:
