@@ -32,7 +32,7 @@ A reverse proxy that sits in front of Ollama, preserves normal API behavior, and
 - [[decisions/index|Decisions]] — append-only ADR record (16 ADRs)
 - [[releases/_template|Releases]] — per-tag notes (template available)
 
-## Vault meta
+## Related
 
-- [[vault-conventions]] — how this vault is organized
+- [[vault-conventions]] — how this vault is organized (Diátaxis + history + the R1–R22 hard rules)
 - [[glossary]] — shared terms

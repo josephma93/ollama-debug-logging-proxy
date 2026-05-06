@@ -37,9 +37,9 @@ Describe any action an operator must take when upgrading from the previous relea
 
 ## Related ADRs
 
-<!-- Link to any ADRs that drove changes in this release. -->
+<!-- Link to any ADRs that drove changes in this release, e.g. [[0014-homebrew-tap-stable-canary-channels]]. Keep this section non-empty; if the release was driven by no ADRs, link [[decisions/index]] for context. -->
 
-- [[decisions/]]
+- [[decisions/index]]
 
 ## Related
 

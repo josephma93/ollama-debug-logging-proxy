@@ -155,7 +155,7 @@ The hard-rules block was adopted via [[0017-hard-rules-for-vault-hygiene]]. Futu
 ### Linking
 
 **R13.** Wikilinks MUST use the short form `[[name]]`, not `[[bucket/name]]`. Allowed path-qualified exceptions: `[[decisions/index]]`, `[[releases/_template]]`.
-*Check:* `grep -rE '\[\[[a-z]+/' documentation-vault/**/*.md` against the allowlist.
+*Check:* `grep -rEn '\[\[[a-z]+/' documentation-vault --include='*.md' --exclude=vault-conventions.md | grep -vE '\[\[(decisions/index|releases/_template)(\||\])'` returns nothing. The check excludes `vault-conventions.md` because this file legitimately quotes the forbidden pattern as part of teaching the rule.
 
 **R14.** Every wikilink MUST resolve to a real file. Broken links block merge — either create the target or remove the link.
 *Check:* `obsidian-cli deadends` plus a custom resolver script.
@@ -180,7 +180,7 @@ The hard-rules block was adopted via [[0017-hard-rules-for-vault-hygiene]]. Futu
 *Check:* `grep -rE '/Users/[a-z.]+|192\.168\.[0-9]+\.[0-9]+' documentation-vault/**/*.md` returns nothing.
 
 **R20.** No `TODO`, `FIXME`, or `XXX` markers in committed notes. If a note is not ready, it does not merge. Follow-ups go in tracked issues, not the prose.
-*Check:* `grep -rE '\b(TODO|FIXME|XXX)\b' documentation-vault/**/*.md` returns nothing.
+*Check:* `grep -rEn '\b(TODO|FIXME|XXX)\b' documentation-vault --include='*.md' --exclude=vault-conventions.md` returns nothing. The check excludes `vault-conventions.md` because this file legitimately names the forbidden markers in stating the rule.
 
 ### Process
 
