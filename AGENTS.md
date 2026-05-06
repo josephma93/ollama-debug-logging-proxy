@@ -8,8 +8,7 @@ Long-form project documentation lives in [`documentation-vault/`](documentation-
 
 Critical things to know before you touch the vault:
 
-- **Single-project root.** Never create a `projects/<name>/` wrapper. The vault root *is* the project.
-- **Bucket placement.** Every note belongs in exactly one of `explanation/` (the why), `reference/` (the what), `how-to/` (the steps), `decisions/` (ADRs, append-only), or `releases/` (per-tag). The vault root holds only `home.md`, `vault-conventions.md`, and `glossary.md`.
+- **Bucket placement.** Every note belongs in exactly one of `explanation/` (the why), `reference/` (the what), `how-to/` (the steps), `decisions/` (ADRs, append-only), or `releases/` (per-tag). The vault root holds only `home.md`, `vault-conventions.md`, and `glossary.md`. Adding a new top-level folder requires an ADR (R1, R21).
 - **Wikilinks are short form.** `[[name]]`, not `[[bucket/name]]`. Filenames are unique by R4. The only path-qualified exceptions are `[[decisions/index]]` and `[[releases/_template]]`.
 - **Every note ends with `## Related`.** That is what makes the vault a network rather than a folder of orphans.
 - **ADRs are append-only.** To change an accepted decision, write a new numbered ADR that supersedes the old one — do not edit the old one in place. See the 0015 ↔ 0016 worked example in [`documentation-vault/decisions/`](documentation-vault/decisions/index.md).

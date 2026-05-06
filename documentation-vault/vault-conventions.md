@@ -18,7 +18,7 @@ documentation-vault/
 └── releases/              ← per-tag notes (history)
 ```
 
-This vault is single-project. There is no `projects/<name>/` wrapper, and adding one is a regression — the root *is* the project.
+The vault is single-project: the root *is* the project, and the four documentation buckets plus the two history folders are the entire layout.
 
 ## The four documentation buckets
 
@@ -83,10 +83,9 @@ Folders are shelves. Links are the graph. The "network of interconnected knowled
 
 ## What NOT to do
 
-- **Do not recreate `projects/<name>/`.** This vault is single-project.
 - **Do not duplicate code-rooted docs.** The repo has `README.md`, `AGENTS.md`, and inline comments — those describe the *current state* of the code. The vault explains the *thinking*. If a fact is true today only because someone made a choice, that choice belongs in `decisions/`. If a fact is a stable lookup, it belongs in `reference/`.
 - **Do not put PII or machine-specific paths in committed notes.** Use `$HOME`, `<user>`, or generic placeholders. Hardcoded paths like `/Users/<name>/...` rot the moment another contributor reads the vault.
-- **Do not let notes grow into kitchen-sink pages.** If a note spans more than one Diátaxis bucket, split it. The pre-restructure `index.md` mixed overview, install runbook, and CLI reference — that is the failure mode this layout exists to prevent.
+- **Do not let notes grow into kitchen-sink pages.** If a note spans more than one Diátaxis bucket, split it.
 - **Do not leave notes orphaned.** Every note must be reachable from `home.md` in at most two hops, and must link to at least one other note.
 
 ## Adding a new note: decision flow
@@ -112,8 +111,8 @@ The hard-rules block was adopted via [[0017-hard-rules-for-vault-hygiene]]. Futu
 
 ### Structure
 
-**R1.** The vault MUST have a single project root. No `projects/<name>/` wrapper, ever.
-*Check:* `find documentation-vault -maxdepth 1 -type d` returns only the five buckets, `.obsidian`, and the vault root itself.
+**R1.** The vault top-level layout is fixed. Only these folders may exist directly under `documentation-vault/`: `explanation/`, `reference/`, `how-to/`, `decisions/`, `releases/`, and `.obsidian/`. Adding any other top-level folder requires a new ADR amending these conventions (see R21).
+*Check:* `find documentation-vault -maxdepth 1 -type d` returns only the five documentation buckets, `.obsidian`, and the vault root itself.
 
 **R2.** The vault root is reserved. Only `home.md`, `vault-conventions.md`, and `glossary.md` may sit at the root. Every other note MUST live in a bucket.
 *Check:* `find documentation-vault -maxdepth 1 -name '*.md'` lists exactly those three files.
@@ -132,7 +131,7 @@ The hard-rules block was adopted via [[0017-hard-rules-for-vault-hygiene]]. Futu
 **R6.** Every note MUST end with a `## Related` section containing at least one wikilink. MOCs and templates included.
 *Check:* `grep -L '^## Related' documentation-vault/**/*.md` returns nothing.
 
-**R7.** A note MUST cover exactly one Diátaxis intent (why / what / how). If it spans two, split it. The pre-restructure `index.md` is the canonical bad example.
+**R7.** A note MUST cover exactly one Diátaxis intent (why / what / how). If it spans two, split it.
 *Check:* Review-gated.
 
 **R8.** MOCs (`home.md`, `decisions/index.md`, any future map of content) MUST contain only: H1, an intro of ≤ 2 sentences, grouped wikilink lists with one-line hooks, and `## Related`. No body prose elsewhere.
@@ -176,7 +175,7 @@ The hard-rules block was adopted via [[0017-hard-rules-for-vault-hygiene]]. Futu
 
 ### Hygiene
 
-**R19.** No hardcoded PII or machine paths in committed notes. Use `$HOME`, `<user>`, `<host>`, `<lan-ip>`. (`reference/prd.md` currently violates this; backfill is a known follow-up.)
+**R19.** No hardcoded PII or machine paths in committed notes. Use `$HOME`, `<user>`, `<host>`, `<lan-ip>`.
 *Check:* `grep -rE '/Users/[a-z.]+|192\.168\.[0-9]+\.[0-9]+' documentation-vault/**/*.md` returns nothing.
 
 **R20.** No `TODO`, `FIXME`, or `XXX` markers in committed notes. If a note is not ready, it does not merge. Follow-ups go in tracked issues, not the prose.
