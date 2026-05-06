@@ -6,8 +6,8 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 1
 fi
 
-PROXY_LABEL="${PROXY_LABEL:-com.joseph.ollama-proxy}"
-OLLAMA_LABEL="${OLLAMA_LABEL:-com.joseph.ollama-server}"
+PROXY_LABEL="${PROXY_LABEL:-dev.ollama.logging-proxy}"
+OLLAMA_LABEL="${OLLAMA_LABEL:-dev.ollama.server}"
 
 LAUNCH_AGENTS_DIR="${LAUNCH_AGENTS_DIR:-$HOME/Library/LaunchAgents}"
 PROXY_PLIST_PATH="${PROXY_PLIST_PATH:-$LAUNCH_AGENTS_DIR/${PROXY_LABEL}.plist}"

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.joseph.ollama-server</string>
+  <string>dev.ollama.server</string>
 
   <key>ProgramArguments</key>
   <array>

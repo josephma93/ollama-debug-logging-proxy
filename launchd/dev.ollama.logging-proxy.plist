@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.joseph.ollama-proxy</string>
+  <string>dev.ollama.logging-proxy</string>
 
   <key>ProgramArguments</key>
   <array>
