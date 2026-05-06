@@ -2,6 +2,8 @@
 
 Reverse proxy in front of Ollama that preserves normal API behavior and writes tapped request/response bodies to daily JSONL logs.
 
+Detailed project and operator documentation lives in [home](documentation-vault/home.md).
+
 ## CLI
 
 The binary supports:
@@ -20,8 +22,6 @@ ollama-logging-proxy purge
 
 ## Homebrew
 
-This repo now includes a Homebrew formula at [`Formula/ollama-logging-proxy.rb`](Formula/ollama-logging-proxy.rb).
-
 Supported install path:
 
 ```bash
@@ -38,6 +38,8 @@ To wire the proxy into launchd after `brew install`:
 ```bash
 ollama-logging-proxy-install
 ```
+
+Re-running `ollama-logging-proxy-install` is expected to be safe. The installer is designed to converge the current user LaunchAgent state to the desired topology, not to require a clean machine each time.
 
 To remove the launchd services while leaving the Homebrew-managed binary installed:
 
@@ -57,31 +59,6 @@ just check
 
 `just check` runs: `fmt`, `vet`, `lint`, `shellcheck`, `test`, and `race`.
 
-## Retention behavior
-
-`internal/retention` deletes only files matching `body-YYYY-MM-DD.jsonl`, based on the date encoded in the filename (not mtime). Non-matching files are ignored.
-
-Use the cleaner at startup and periodic cadence:
-
-```go
-cleaner := retention.NewCleaner(logDir, retentionDays)
-errCh := cleaner.Start(ctx, time.Hour) // immediate run + hourly cleanup
-```
-
-## launchd templates
-
-Templates are provided in [`launchd/`](launchd):
-
-- `com.joseph.ollama-proxy.plist`
-- `com.joseph.ollama-private.plist` (label: `com.joseph.ollama-server`)
-
-Defaults follow the PRD:
-
-- Proxy listener: `0.0.0.0:11434`
-- Private Ollama upstream: `127.0.0.1:11435`
-- Proxy log dir: `~/Library/Logs/ollama-proxy`
-- Retention: `10` days
-
 ## macOS scripts
 
 Scripts are in [`scripts/`](scripts):
@@ -94,38 +71,13 @@ Scripts are in [`scripts/`](scripts):
 
 `install.sh` is the source-checkout convenience path. It builds the proxy binary, then installs launch agents into `~/Library/LaunchAgents`, configures PRD env vars, and bootstraps both agents.
 
-`install-launchd.sh` installs or updates the launchd setup for an already-installed binary, which is the right entrypoint for Homebrew installs.
+`install-launchd.sh` installs or updates the launchd setup for an already-installed binary, which is the right entrypoint for Homebrew installs. It is intended to be idempotent: unchanged healthy services should be left alone, while missing or unhealthy services should be reconciled back to the expected topology.
 
 `smoke-test.sh` checks `GET /__ollama_logging_proxy/health`, sends `POST /api/generate`, and verifies today’s `body-YYYY-MM-DD.jsonl` contains a `/api/generate` entry.
 
 `uninstall-launchd.sh` removes only the LaunchAgents and optionally the proxy logs.
 
 `uninstall.sh` is the source-checkout convenience path. It removes the LaunchAgents and, by default, removes the locally installed binary. If the binary path points at Homebrew’s `bin`, it leaves the binary alone unless you explicitly set `REMOVE_BINARY=1`.
-
-## Release Automation
-
-Homebrew release automation follows this sequence:
-
-Tag semantics:
-
-- Stable release tag: `v0.1.0`
-- Prerelease tag: `v0.1.1-canary.1`, `v0.1.1-rc.1`, `v0.1.1-beta.1`, `v0.1.1-alpha.1`
-- Rule: if the version contains a hyphen suffix after the numeric core, it is treated as a prerelease.
-
-1. Push a version tag such as `v0.1.0` or `v0.1.1-canary.1`.
-2. [`.github/workflows/release.yml`](.github/workflows/release.yml) builds macOS release tarballs for `arm64` and `x86_64`, including:
-   - `ollama-logging-proxy`
-   - `scripts/install-launchd.sh`
-   - `scripts/uninstall-launchd.sh`
-   - `launchd/*.plist`
-3. The workflow uploads those tarballs and matching `.sha256` files to the GitHub Release.
-4. If the tag is a stable tag, the same release workflow regenerates [`Formula/ollama-logging-proxy.rb`](Formula/ollama-logging-proxy.rb) from [`.github/formula-template.rb`](.github/formula-template.rb) using the release checksums and pushes the formula update back to `main`.
-5. If the tag is a prerelease tag, the workflow still publishes release artifacts, but it does not rewrite the stable Homebrew formula.
-
-In other words:
-
-- Stable tags are installable through the Homebrew tap once the formula update lands.
-- Prerelease tags publish GitHub release artifacts for manual testing, but they are not a supported Homebrew install channel.
 
 ## CI
 
