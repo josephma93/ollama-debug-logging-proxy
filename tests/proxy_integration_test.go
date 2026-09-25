@@ -143,6 +143,40 @@ func TestProxyHealthEndpointIsNotForwarded(t *testing.T) {
 	}
 }
 
+func TestProxyRewritesHostToTarget(t *testing.T) {
+	hosts := make(chan string, 1)
+
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hosts <- r.Host
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer upstream.Close()
+
+	upstreamURL, err := url.Parse(upstream.URL)
+	if err != nil {
+		t.Fatalf("failed to parse upstream URL: %v", err)
+	}
+
+	proxyServer := newProxyServer(t, upstream.URL, 1024, nil)
+	defer proxyServer.Close()
+
+	req, err := http.NewRequest(http.MethodGet, proxyServer.URL+"/api/version", nil)
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+	req.Host = "some-lan-name.example:11434"
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("proxy request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if got := <-hosts; got != upstreamURL.Host {
+		t.Fatalf("expected upstream Host %q, got %q", upstreamURL.Host, got)
+	}
+}
+
 func TestProxyTappedCaptureWithQueryAndBounds(t *testing.T) {
 	const (
 		requestBody  = "request-body-long"

@@ -68,6 +68,13 @@ func New(options Options) (http.Handler, error) {
 	}
 
 	rp := httputil.NewSingleHostReverseProxy(options.Target)
+	// Ollama rejects Host headers it does not recognize when bound to loopback,
+	// so forward the target host instead of the client-supplied one.
+	director := rp.Director
+	rp.Director = func(r *http.Request) {
+		director(r)
+		r.Host = options.Target.Host
+	}
 	rp.FlushInterval = -1
 	rp.ModifyResponse = h.modifyResponse
 	rp.ErrorHandler = h.errorHandler
