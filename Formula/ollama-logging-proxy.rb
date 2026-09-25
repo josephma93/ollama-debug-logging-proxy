@@ -1,9 +1,9 @@
 class OllamaLoggingProxy < Formula
   desc "Reverse proxy in front of Ollama with JSONL request and response logging"
   homepage "https://github.com/josephma93/ollama-debug-logging-proxy"
-  version "0.1.1"
-  url "https://github.com/josephma93/ollama-debug-logging-proxy/archive/refs/tags/v0.1.1.tar.gz"
-  sha256 "dafd852517eb796d9c03465b4f51a6d96c325d649464836ca2404f19b2ef02e6"
+  version "0.1.2"
+  url "https://github.com/josephma93/ollama-debug-logging-proxy/archive/refs/tags/v0.1.2.tar.gz"
+  sha256 "c27f29d4943333cac505992bece0e0235fbb814719953022f3fcbe2bb3a2867c"
   conflicts_with "ollama-logging-proxy-canary", because: "both formulae install the same proxy and helper command names"
   depends_on "go" => :build
 
